@@ -1,0 +1,7 @@
+# Make longhorn the default storage in Kubernetes
+longhorn_default_storage: true
+
+longhorn_file_dest: /tmp
+
+# numOfReplicas setting for longhorn
+longhorn_number_of_replicas: 1

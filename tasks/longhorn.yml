@@ -1,0 +1,43 @@
+- name: Install Longhorn Requirements
+  become: yes
+  apt: 
+    name: 
+      - open-iscsi
+      - curl
+      - util-linux
+      - grep
+      - mawk
+      - libblkid1 
+    state: present
+    update_cache: yes
+
+- name: Install Longhorn to Kubeadm cluster
+  command: kubectl apply -f https://raw.githubusercontent.com/rancher/longhorn/master/deploy/longhorn.yaml
+
+- name: Download Longhorn storage class definition
+  get_url:
+    url: "https://raw.githubusercontent.com/rancher/longhorn/master/examples/storageclass.yaml"
+    dest: "{{ longhorn_file_dest }}/longhornStorageClass.yaml"
+
+- name: Set the numberOfReplicas for the Longhorn storage class
+  lineinfile:
+    path: "{{ longhorn_file_dest }}/longhornStorageClass.yaml"
+    regexp: "  numberOfReplicas:"
+    line: "  numberOfReplicas: \"{{ longhorn_number_of_replicas }}\""
+
+- name: Add Longhorn storage class to Kubeadm cluster
+  command: kubectl apply -f {{ longhorn_file_dest }}/longhornStorageClass.yaml
+
+- name: Check for existing default storage class in Kubeadm
+  shell: kubectl get storageclass | grep default | awk '{print $1}'
+  register: default_storage_check_result
+  when: longhorn_default_storage
+
+- name: Remove role of default existing storage from existing
+  shell: "kubectl patch storageclass {{ default_storage_check_result.stdout }} -p \'{\"metadata\": {\"annotations\":{\"storageclass.kubernetes.io/is-default-class\":\"false\"}}}\'"
+  when: longhorn_default_storage and default_storage_check_result.stdout != ""
+
+- name: Make Longhorn default storage class for Kubeadm
+  command: "kubectl patch storageclass longhorn -p \'{\"metadata\": {\"annotations\":{\"storageclass.kubernetes.io/is-default-class\":\"true\"}}}\'"
+  when: longhorn_default_storage
+
