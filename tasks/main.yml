@@ -12,11 +12,11 @@
     update_cache: yes
 
 - name: Install Longhorn to Kubeadm cluster
-  command: kubectl apply -f https://raw.githubusercontent.com/rancher/longhorn/master/deploy/longhorn.yaml
+  command: kubectl apply -f https://raw.githubusercontent.com/longhorn/longhorn/v0.6.2/deploy/longhorn.yaml
 
 - name: Download Longhorn storage class definition
   get_url:
-    url: "https://raw.githubusercontent.com/rancher/longhorn/master/examples/storageclass.yaml"
+    url: "https://raw.githubusercontent.com/longhorn/longhorn/v0.6.2/examples/storageclass.yaml"
     dest: "{{ longhorn_file_dest }}/longhornStorageClass.yaml"
 
 - name: Set the numberOfReplicas for the Longhorn storage class
